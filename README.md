@@ -57,29 +57,7 @@ cmake --install build --prefix "$SDK_PREFIX"
 
 ### 类关系
 
-~~~mermaid
-classDiagram
-    direction TB
-    ChatSDK *-- LLMManager
-    ChatSDK *-- SessionManager
-    ChatSDK o-- Config
-    Config <|-- ApiConfig
-    Config <|-- OllamaConfig
-
-    LLMManager *-- ModelInfo
-    LLMManager *-- ILLMProvider
-    ILLMProvider <|-- DeepSeekProvider
-    ILLMProvider <|-- ChatGPTProvider
-    ILLMProvider <|-- QwenProvider
-    ILLMProvider <|-- OllamaProvider
-    ILLMProvider ..> Message
-
-    SessionManager *-- DataManager
-    SessionManager o-- Session
-    Session *-- Message
-    DataManager ..> Session
-    DataManager ..> Message
-~~~
+![ChatSDK 类关系图](docs/images/chat-sdk-class-diagram.svg)
 
 应用通过 `ChatSDK` 创建会话和发送消息。`LLMManager` 把请求交给对应的 Provider。`SessionManager` 管理当前会话，并通过 `DataManager` 将会话与消息读写到 SQLite。
 

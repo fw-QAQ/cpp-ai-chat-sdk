@@ -1,0 +1,134 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="710" height="413" viewBox="0 0 710 413" role="img" aria-labelledby="title">
+  <title id="title">ChatSDK 类关系图</title>
+  <desc>ChatSDK 组合 SessionManager、LLMManager 和模型配置。模型实现包括 DeepSeekProvider、ChatGPTProvider、QwenProvider 和 OllamaProvider。</desc>
+  <style>
+    .class, .main, .provider { stroke: #171a1d; stroke-width: 1.25; }
+    .class { fill: #edf2fa; }
+    .main { fill: #fafafa; }
+    .provider { fill: #fff1cc; }
+    .divider, .edge { fill: none; stroke: #171a1d; stroke-width: 1.2; }
+    .dependency { stroke-dasharray: 2.5 3.2; }
+    .class-name { fill: #151820; font-family: Arial; font-weight: bold; font-size: 9.6px; text-anchor: middle; }
+    .relation { fill: #151820; font-family: Microsoft YaHei; font-size: 8.5px; text-anchor: middle; }
+  </style>
+  <rect x=".5" y=".5" width="707" height="407" rx="8" fill="#fff" stroke="#dedfe1"/>
+  <g aria-hidden="true">
+    <path d="M 270 40 L 522 96" class="edge diamond"/>
+    <path d="M 270.00 40.00 L 273.30 43.60 L 277.81 41.74 L 274.51 38.13 Z" fill="#171a1d"/>
+    <path d="M 229 61 L 183 108" class="edge diamond"/>
+    <path d="M 229.00 61.00 L 224.20 61.90 L 223.40 66.72 L 228.20 65.82 Z" fill="#171a1d"/>
+    <path d="M 238 61 L 287 108" class="edge diamond"/>
+    <path d="M 238.00 61.00 L 238.95 65.79 L 243.77 66.54 L 242.82 61.75 Z" fill="#171a1d"/>
+    <path d="M 140 128 L 54 180" class="edge diamond"/>
+    <path d="M 140.00 128.00 L 135.13 127.67 L 133.15 132.14 L 138.03 132.47 Z" fill="#171a1d"/>
+    <path d="M 183 150 V 179" class="edge diamond"/>
+    <path d="M 183.00 150.00 L 180.20 154.00 L 183.00 158.00 L 185.80 154.00 Z" fill="#171a1d"/>
+    <path d="M 287 150 V 179" class="edge diamond"/>
+    <path d="M 287.00 150.00 L 284.20 154.00 L 287.00 158.00 L 289.80 154.00 Z" fill="#171a1d"/>
+    <path d="M 183 221 V 251" class="edge diamond"/>
+    <path d="M 183.00 221.00 L 180.20 225.00 L 183.00 229.00 L 185.80 225.00 Z" fill="#171a1d"/>
+    <path d="M 322 130 L 456 276" class="edge diamond"/>
+    <path d="M 322.00 130.00 L 322.64 134.84 L 327.41 135.89 L 326.77 131.05 Z" fill="#171a1d"/>
+    <path d="M 465 183 L 527 138" class="edge inherit"/>
+    <path d="M 527.00 138.00 L 522.46 145.37 L 518.59 140.03 Z" fill="#fff" stroke="#171a1d" stroke-width="1.05"/>
+    <path d="M 586 183 L 529 138" class="edge inherit"/>
+    <path d="M 529.00 138.00 L 537.32 140.37 L 533.23 145.55 Z" fill="#fff" stroke="#171a1d" stroke-width="1.05"/>
+    <path d="M 405 297 L 225 271" class="edge dependency"/>
+    <path d="M 230.31 269.24 L 225.00 271.00 L 229.59 274.19" fill="none" stroke="#171a1d" stroke-width="1.05"/>
+    <path d="M 334 342 L 405 298" class="edge inherit"/>
+    <path d="M 405.00 298.00 L 399.94 305.02 L 396.46 299.41 Z" fill="#fff" stroke="#171a1d" stroke-width="1.05"/>
+    <path d="M 427 342 L 453 318" class="edge inherit"/>
+    <path d="M 453.00 318.00 L 449.36 325.85 L 444.88 321.00 Z" fill="#fff" stroke="#171a1d" stroke-width="1.05"/>
+    <path d="M 513 342 L 460 318" class="edge inherit"/>
+    <path d="M 460.00 318.00 L 468.65 318.29 L 465.93 324.31 Z" fill="#fff" stroke="#171a1d" stroke-width="1.05"/>
+    <path d="M 619 342 L 511 297" class="edge inherit"/>
+    <path d="M 511.00 297.00 L 519.65 297.03 L 517.12 303.12 Z" fill="#fff" stroke="#171a1d" stroke-width="1.05"/>
+  </g>
+  <g aria-hidden="true">
+    <g transform="translate(198 20)">
+      <rect class="main" width="72" height="40" rx="3"/>
+      <path class="divider" d="M 0 20 H 72"/>
+      <text class="class-name" x="36" y="13.1">ChatSDK</text>
+    </g>
+    <g transform="translate(140 108)">
+      <rect class="class" width="85" height="42" rx="3"/>
+      <path class="divider" d="M 0 20 H 85"/>
+      <text class="class-name" x="42.5" y="13.1">SessionManager</text>
+    </g>
+    <g transform="translate(253 108)">
+      <rect class="class" width="69" height="42" rx="3"/>
+      <path class="divider" d="M 0 20 H 69"/>
+      <text class="class-name" x="34.5" y="13.1">LLMManager</text>
+    </g>
+    <g transform="translate(483 96)">
+      <rect class="class" width="84" height="42" rx="3"/>
+      <path class="divider" d="M 0 20 H 84"/>
+      <text class="class-name" x="42" y="13.1">Config</text>
+    </g>
+    <g transform="translate(12 180)">
+      <rect class="class" width="85" height="41" rx="3"/>
+      <path class="divider" d="M 0 20 H 85"/>
+      <text class="class-name" x="42.5" y="13.1">DataManager</text>
+    </g>
+    <g transform="translate(140 179)">
+      <rect class="class" width="85" height="42" rx="3"/>
+      <path class="divider" d="M 0 20 H 85"/>
+      <text class="class-name" x="42.5" y="13.1">Session</text>
+    </g>
+    <g transform="translate(245 179)">
+      <rect class="class" width="85" height="42" rx="3"/>
+      <path class="divider" d="M 0 20 H 85"/>
+      <text class="class-name" x="42.5" y="13.1">ModelInfo</text>
+    </g>
+    <g transform="translate(422 183)">
+      <rect class="class" width="85" height="42" rx="3"/>
+      <path class="divider" d="M 0 20 H 85"/>
+      <text class="class-name" x="42.5" y="13.1">ApiConfig</text>
+    </g>
+    <g transform="translate(545 183)">
+      <rect class="class" width="85" height="42" rx="3"/>
+      <path class="divider" d="M 0 20 H 85"/>
+      <text class="class-name" x="42.5" y="13.1">OllamaConfig</text>
+    </g>
+    <g transform="translate(140 251)">
+      <rect class="class" width="85" height="41" rx="3"/>
+      <path class="divider" d="M 0 20 H 85"/>
+      <text class="class-name" x="42.5" y="13.1">Message</text>
+    </g>
+    <g transform="translate(405 276)">
+      <rect class="provider" width="106" height="42" rx="3"/>
+      <path class="divider" d="M 0 20 H 106"/>
+      <text class="class-name" x="53" y="13.1">ILLMProvider</text>
+    </g>
+    <g transform="translate(290 342)">
+      <rect class="class" width="89" height="41" rx="3"/>
+      <path class="divider" d="M 0 20 H 89"/>
+      <text class="class-name" x="44.5" y="13.1">DeepSeekProvider</text>
+    </g>
+    <g transform="translate(384 342)">
+      <rect class="class" width="87" height="41" rx="3"/>
+      <path class="divider" d="M 0 20 H 87"/>
+      <text class="class-name" x="43.5" y="13.1">ChatGPTProvider</text>
+    </g>
+    <g transform="translate(475 342)">
+      <rect class="class" width="77" height="41" rx="3"/>
+      <path class="divider" d="M 0 20 H 77"/>
+      <text class="class-name" x="38.5" y="13.1">QwenProvider</text>
+    </g>
+    <g transform="translate(558 342)">
+      <rect class="class" width="122" height="41" rx="3"/>
+      <path class="divider" d="M 0 20 H 122"/>
+      <text class="class-name" x="61" y="13.1">OllamaProvider</text>
+    </g>
+  </g>
+  <g class="relation" aria-hidden="true">
+    <rect x="201" y="78" width="22" height="10" fill="#fff"/>
+    <text x="212" y="86">组合</text>
+    <rect x="483" y="156" width="22" height="10" fill="#fff"/>
+    <text x="494" y="164">继承</text>
+    <rect x="547" y="156" width="22" height="10" fill="#fff"/>
+    <text x="558" y="164">继承</text>
+    <rect x="294" y="278" width="22" height="10" fill="#fff"/>
+    <text x="305" y="286">依赖</text>
+  </g>
+</svg>

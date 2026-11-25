@@ -1,0 +1,15 @@
+@PACKAGE_INIT@
+
+include(CMakeFindDependencyMacro)
+
+# 查找 ChatSDK 所依赖的第三方库
+find_dependency(bite_scaffold CONFIG)
+find_dependency(OpenSSL)
+find_dependency(Threads)
+find_dependency(SQLite3)
+
+# 导入 ChatSDK 的目标信息
+include("${CMAKE_CURRENT_LIST_DIR}/chat_sdkTargets.cmake")
+
+# 检查请求的组件是否满足要求
+check_required_components(chat_sdk)

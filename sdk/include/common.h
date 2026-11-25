@@ -38,18 +38,39 @@ struct Session {
     {}
 };
 
+
 // 通用模型配置
 struct Config {
     virtual ~Config() = default;
 
     std::string model_name;
+
     double temperature = 0.7;
+
     int max_tokens = 2048;
 };
 
-// 云端 API 模型配置
+
+// API 模型配置
 struct ApiConfig : public Config {
-    std::string api_key;// 接⼊模型时认证信息
+    std::string api_key;
+
+    // API 服务地址
+    std::string endpoint;
+
+    // 模型描述
+    std::string model_desc;
+
+    // 部分第三方 API 服务的分组参数
+    std::string group;
+};
+
+
+// Ollama 本地模型配置
+struct OllamaConfig : public Config {
+    std::string endpoint;
+
+    std::string model_desc;
 };
 
 // 模型基本信息

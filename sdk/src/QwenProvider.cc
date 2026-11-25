@@ -1,10 +1,10 @@
 #include "../include/QwenProvider.h"
 #include "../include/SSEParser.h"
-#include <bite_scaffold/json_util.h>
-#include <bite_scaffold/log.h>
+#include "JsonUtil.h"
+#include "Log.h"
 
 #include <httplib.h>
-#include <jsoncpp/json/json.h>
+#include <json/json.h>
 
 #include <algorithm>
 #include <cstdint>
@@ -18,7 +18,7 @@ bool QwenProvider::initModel(
   auto it = model_config.find("api_key");
 
   if (it == model_config.end() || it->second.empty()) {
-    ERR("QwenProvider initialization failed: missing API key");
+    CHAT_SDK_ERROR("QwenProvider initialization failed: missing API key");
     return false;
   }
   _api_key = it->second;
@@ -33,8 +33,8 @@ bool QwenProvider::initModel(
 
   _endpoint = base_url;
   _isAvailable = true;
-  INF("Init success!!!!");
-  INF("Qwen provider initialized successfull whith endpoint: {}",
+  CHAT_SDK_INFO("Init success!!!!");
+  CHAT_SDK_INFO("Qwen provider initialized successfull whith endpoint: {}",
       _endpoint);
   return true;
 }
@@ -58,7 +58,7 @@ std::string QwenProvider::sendMessage(
 
   // 检查模型是否已初始化。
   if (!isAvailable()) {
-    ERR("QwenProvider sendMessage failed: model not initialized");
+    CHAT_SDK_ERROR("QwenProvider sendMessage failed: model not initialized");
     return "";
   }
 
@@ -99,8 +99,8 @@ std::string QwenProvider::sendMessage(
   // 使用已经封装的 JSON 序列化接口
   std::string request_body;
 
-  if (!bitejson::serialize(root, &request_body)) {
-    ERR("Qwen request JSON serialization failed");
+  if (!ai_chat_sdk::json::serialize(root, &request_body)) {
+    CHAT_SDK_ERROR("Qwen request JSON serialization failed");
     return "";
   }
 
@@ -113,20 +113,20 @@ std::string QwenProvider::sendMessage(
   httplib::Result res = client.Post("/compatible-mode/v1/chat/completions", headers, request_body,
                                     "application/json");
   if (!res) {
-    ERR("Failed to connect to Qwen API - check network and SSL "
+    CHAT_SDK_ERROR("Failed to connect to Qwen API - check network and SSL "
         "configuration: {}",
         httplib::to_string(res.error()));
     return "";
   }
   if (res->status != 200) {
-    ERR("Qwen API response HTTP status code not 200: {}", res->status);
-    ERR("Qwen API error details: {}", res->body);
+    CHAT_SDK_ERROR("Qwen API response HTTP status code not 200: {}", res->status);
+    CHAT_SDK_ERROR("Qwen API error details: {}", res->body);
     return "";
   }
   std::string err;
   Json::Value response;
-  if (!bitejson::unserialize(res->body, &response, &err)) {
-    ERR("QwenProvider sendMessage failed: JSON response deserialization "
+  if (!ai_chat_sdk::json::unserialize(res->body, &response, &err)) {
+    CHAT_SDK_ERROR("QwenProvider sendMessage failed: JSON response deserialization "
         "failed: {}",
         err);
     return "";
@@ -134,7 +134,7 @@ std::string QwenProvider::sendMessage(
 
   if (!response.isObject() || !response["choices"].isArray() ||
       response["choices"].empty()) {
-    ERR("Qwen response: invalid choices");
+    CHAT_SDK_ERROR("Qwen response: invalid choices");
     return "";
   }
 
@@ -142,7 +142,7 @@ std::string QwenProvider::sendMessage(
 
   if (!choice.isObject() || !choice["message"].isObject() ||
       !choice["message"]["content"].isString()) {
-    ERR("Qwen response: invalid message content");
+    CHAT_SDK_ERROR("Qwen response: invalid message content");
     return "";
   }
 
@@ -156,7 +156,7 @@ std::string QwenProvider::sendMessageStream(
 
   // 检查模型是否初始化、messages 是否为空。
       if (!isAvailable()) {
-    ERR("QwenProvider sendMessage failed: model not initialized");
+    CHAT_SDK_ERROR("QwenProvider sendMessage failed: model not initialized");
     return "";
   }
 
@@ -197,8 +197,8 @@ std::string QwenProvider::sendMessageStream(
   // 使用已经封装的 JSON 序列化接口
   std::string request_body;
 
-  if (!bitejson::serialize(root, &request_body)) {
-    ERR("Qwen request JSON serialization failed");
+  if (!ai_chat_sdk::json::serialize(root, &request_body)) {
+    CHAT_SDK_ERROR("Qwen request JSON serialization failed");
     return "";
   }
 
@@ -270,7 +270,7 @@ auto res = client.send(req);
 // 1. 优先判断 SSE 解析错误
 if (parser.hasError())
 {
-    ERR("Qwen SSE parse failed: {}",
+    CHAT_SDK_ERROR("Qwen SSE parse failed: {}",
         parser.errorMessage());
 
     return "";
@@ -279,7 +279,7 @@ if (parser.hasError())
 // 2. 检查网络传输
 if (!res)
 {
-    ERR("Qwen streaming network error: {}",
+    CHAT_SDK_ERROR("Qwen streaming network error: {}",
         httplib::to_string(res.error()));
 
     return "";
@@ -288,7 +288,7 @@ if (!res)
 // 3. 检查 HTTP 状态
 if (res->status != 200)
 {
-    ERR("Qwen streaming HTTP status: {}",
+    CHAT_SDK_ERROR("Qwen streaming HTTP status: {}",
         res->status);
 
     return "";
@@ -297,7 +297,7 @@ if (res->status != 200)
 // 4. 检查是否收到 SSE 结束标记
 if (!parser.isDone())
 {
-    ERR("Qwen stream ended without [DONE]");
+    CHAT_SDK_ERROR("Qwen stream ended without [DONE]");
 
     return "";
 }

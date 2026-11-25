@@ -5,7 +5,7 @@
 #include "QwenProvider.h"
 #include "OllamaProvider.h"
 
-#include <bite_scaffold/log.h>
+#include "Log.h"
 
 #include <cstdlib>
 #include <iostream>
@@ -20,9 +20,9 @@ int main()
 {
     // ========== 1. 初始化日志 ==========
 
-    bitelog::log_settings settings;
+    ai_chat_sdk::log::Settings settings;
     settings.async = false;
-    bitelog::bitelog_init(settings);
+    ai_chat_sdk::log::initialize(settings);
 
 
     // ========== 2. 创建模型管理器 ==========
@@ -48,26 +48,26 @@ int main()
             "qwen2.5:7b",
             std::make_unique<OllamaProvider>())) {
 
-        ERR("Provider registration failed");
+        CHAT_SDK_ERROR("Provider registration failed");
         return 1;
     }
 
-    INF("All providers registered successfully");
+    CHAT_SDK_INFO("All providers registered successfully");
 
 
     // ========== 4. 测试初始状态 ==========
 
     if (!manager.getAvailableModel().empty()) {
-        ERR("Uninitialized models should not be available");
+        CHAT_SDK_ERROR("Uninitialized models should not be available");
         return 1;
     }
 
     if (manager.isModelAvailable("unknown-model")) {
-        ERR("Unknown model availability test failed");
+        CHAT_SDK_ERROR("Unknown model availability test failed");
         return 1;
     }
 
-    INF("Initial model state test passed");
+    CHAT_SDK_INFO("Initial model state test passed");
 
 
     // ========== 5. 初始化 DeepSeek ==========
@@ -159,7 +159,7 @@ int main()
         std::cout << "--------------------------------------\n";
     }
 
-    INF("Available model count: {}", models.size());
+    CHAT_SDK_INFO("Available model count: {}", models.size());
 
 
     // ========== 10. 构造聊天消息 ==========
@@ -190,11 +190,11 @@ int main()
             messages,
             params).empty()) {
 
-        ERR("Unknown model routing test failed");
+        CHAT_SDK_ERROR("Unknown model routing test failed");
         return 1;
     }
 
-    INF("Unknown model routing test passed");
+    CHAT_SDK_INFO("Unknown model routing test passed");
 
 
     // ========== 12. 测试模型路由 ==========
@@ -202,7 +202,7 @@ int main()
     for (const auto& model : models) {
 
         if (!manager.isModelAvailable(model._name)) {
-            ERR("Model availability state inconsistent");
+            CHAT_SDK_ERROR("Model availability state inconsistent");
             return 1;
         }
 
@@ -217,7 +217,7 @@ int main()
         );
 
         if (answer.empty()) {
-            ERR("Model {} routing test failed",
+            CHAT_SDK_ERROR("Model {} routing test failed",
                 model._name);
 
             return 1;
@@ -225,7 +225,7 @@ int main()
 
         std::cout << answer << '\n';
 
-        INF("Model {} routing test passed",
+        CHAT_SDK_INFO("Model {} routing test passed",
             model._name);
     }
 
@@ -259,13 +259,13 @@ int main()
         full_answer != streamed_answer ||
         done_count != 1) {
 
-        ERR("LLMManager streaming routing test failed");
+        CHAT_SDK_ERROR("LLMManager streaming routing test failed");
         return 1;
     }
 
-    INF("LLMManager streaming routing test passed");
+    CHAT_SDK_INFO("LLMManager streaming routing test passed");
 
-    INF("All LLMManager tests passed!");
+    CHAT_SDK_INFO("All LLMManager tests passed!");
 
     return 0;
 }

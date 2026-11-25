@@ -1,6 +1,6 @@
 #include "DataManager.h"
 
-#include <bite_scaffold/log.h>
+#include "Log.h"
 
 #include <linux/stat.h>
 #include <stdexcept>
@@ -40,7 +40,7 @@ DataManager::DataManager(const std::string& dbName)
         );
     }
 
-    INF("Database opened successfully: {}", _dbName);
+    CHAT_SDK_INFO("Database opened successfully: {}", _dbName);
 }
 
 
@@ -52,7 +52,7 @@ DataManager::~DataManager()
         sqlite3_close(_db);
         _db = nullptr;
 
-        INF("Database closed: {}", _dbName);
+        CHAT_SDK_INFO("Database closed: {}", _dbName);
     }
 }
 
@@ -64,7 +64,7 @@ bool DataManager::initDatabase()
 
     // 显式启用外键约束
     if (!executeSQL("PRAGMA foreign_keys = ON;")) {
-        ERR("enable foreign_keys failed")
+        CHAT_SDK_ERROR("enable foreign_keys failed");
         return false;
     }
 
@@ -79,7 +79,7 @@ bool DataManager::initDatabase()
     )";
 
     if (!executeSQL(createSessionsTable)) {
-          ERR("create session table failed");
+          CHAT_SDK_ERROR("create session table failed");
         return false;
     }
 
@@ -99,7 +99,7 @@ bool DataManager::initDatabase()
     )";
 
     if (!executeSQL(createMessagesTable)) {
-        ERR("create messages table failed");
+        CHAT_SDK_ERROR("create messages table failed");
         return false;
     }
 
@@ -110,11 +110,11 @@ bool DataManager::initDatabase()
     )";
 
     if (!executeSQL(createMessageIndex)) {
-        ERR("create message index failed");
+        CHAT_SDK_ERROR("create message index failed");
         return false;
     }
 
-    INF("Database initialized successfully");
+    CHAT_SDK_INFO("Database initialized successfully");
 
     return true;
 }
@@ -135,7 +135,7 @@ bool DataManager::executeSQL(const std::string& sql)
     );
 
     if (rc != SQLITE_OK) {
-        ERR(
+        CHAT_SDK_ERROR(
             "Failed to execute SQL: {}",
             errMsg ? errMsg : sqlite3_errmsg(_db)
         );
@@ -170,7 +170,7 @@ DataManager::StatementPtr DataManager::prepare(
     );
 
     if (rc != SQLITE_OK) {
-        ERR(
+        CHAT_SDK_ERROR(
             "Failed to prepare SQL: {}",
             sqlite3_errmsg(_db)
         );
@@ -191,7 +191,7 @@ bool DataManager::executeStatement(
     sqlite3_stmt* stmt
 ) const {
     if (sqlite3_step(stmt) != SQLITE_DONE) {
-        ERR(
+        CHAT_SDK_ERROR(
             "Failed to execute statement: {}",
             sqlite3_errmsg(_db)
         );
@@ -220,7 +220,7 @@ bool DataManager::bindText(
     );
 
     if (rc != SQLITE_OK) {
-        ERR(
+        CHAT_SDK_ERROR(
             "Failed to bind text: {}",
             sqlite3_errmsg(_db)
         );
@@ -261,7 +261,7 @@ bool DataManager::insertSession(
     std::lock_guard<std::mutex> lock(_mutex);
 
     if (session.id.empty() || session.model_name.empty()) {
-        ERR("Invalid session");
+        CHAT_SDK_ERROR("Invalid session");
         return false;
     }
 
@@ -299,7 +299,7 @@ bool DataManager::insertSession(
             static_cast<sqlite3_int64>(session.updated_at)
         ) != SQLITE_OK
     ) {
-        ERR("Failed to bind session parameters");
+        CHAT_SDK_ERROR("Failed to bind session parameters");
         return false;
     }
 
@@ -307,7 +307,7 @@ bool DataManager::insertSession(
         return false;
     }
 
-    INF("Inserted session: {}", session.id);
+    CHAT_SDK_INFO("Inserted session: {}", session.id);
 
     return true;
 }
@@ -344,7 +344,7 @@ std::shared_ptr<Session> DataManager::getSession(
 
     // 查询发生错误
     if (rc != SQLITE_ROW) {
-        ERR("Failed to query session: {}",
+        CHAT_SDK_ERROR("Failed to query session: {}",
             sqlite3_errmsg(_db));
 
         return nullptr;
@@ -373,7 +373,7 @@ std::shared_ptr<Session> DataManager::getSession(
     // 3. 如果历史消息查询失败，返回 nullptr。
     if(!readMessagesUnlocked(session->id,session->messages))
     {
-        ERR("read messages failed");
+        CHAT_SDK_ERROR("read messages failed");
         return nullptr;
     }
     return session;
@@ -405,7 +405,7 @@ bool DataManager::updateTimestampUnlocked(
 
         !bindText(stmt.get(), 2, sessionId)
     ) {
-        ERR("Failed to bind timestamp parameters");
+        CHAT_SDK_ERROR("Failed to bind timestamp parameters");
 
         return false;
     }
@@ -428,12 +428,12 @@ bool DataManager::updateSessionTimestamp(
     std::lock_guard<std::mutex> lock(_mutex);
 
     if (!updateTimestampUnlocked(sessionId, timestamp)) {
-        ERR("Failed to update session: {}", sessionId);
+        CHAT_SDK_ERROR("Failed to update session: {}", sessionId);
 
         return false;
     }
 
-    INF("Updated session timestamp: {}", sessionId);
+    CHAT_SDK_INFO("Updated session timestamp: {}", sessionId);
     return true;
 }
 // ========== 13. 删除会话 ==========
@@ -467,7 +467,7 @@ bool DataManager::deleteSession(
     }
 
     // 历史消息通过外键约束自动删除
-    INF("Deleted session: {}", sessionId);
+    CHAT_SDK_INFO("Deleted session: {}", sessionId);
 
     return true;
 }
@@ -501,7 +501,7 @@ DataManager::getAllSessionIds() const
     }
 
     if (rc != SQLITE_DONE) {
-        ERR("Failed to query session IDs: {}",
+        CHAT_SDK_ERROR("Failed to query session IDs: {}",
             sqlite3_errmsg(_db));
 
         return {};
@@ -560,7 +560,7 @@ DataManager::getAllSessions() const
     }
 
     if (rc != SQLITE_DONE) {
-        ERR("Failed to query sessions: {}",
+        CHAT_SDK_ERROR("Failed to query sessions: {}",
             sqlite3_errmsg(_db));
 
         return {};
@@ -583,7 +583,7 @@ size_t DataManager::getSessionCount() const
     }
 
     if (sqlite3_step(stmt.get()) != SQLITE_ROW) {
-        ERR("Failed to count sessions: {}",
+        CHAT_SDK_ERROR("Failed to count sessions: {}",
             sqlite3_errmsg(_db));
 
         return 0;
@@ -605,7 +605,7 @@ bool DataManager::clearAllSessions()
         return false;
     }
 
-    INF("Clear all sessions successfully");
+    CHAT_SDK_INFO("Clear all sessions successfully");
 
     return true;
 }
@@ -648,7 +648,7 @@ bool DataManager::insertMessageUnlocked(
             static_cast<sqlite3_int64>(message.timestamp)
         ) != SQLITE_OK
     ) {
-        ERR("Failed to bind message parameters");
+        CHAT_SDK_ERROR("Failed to bind message parameters");
 
         return false;
     }
@@ -666,7 +666,7 @@ bool DataManager::insertMessage(
 
     // 检查会话 ID 和消息 ID
     if (sessionId.empty() || message.id.empty()) {
-        ERR("Invalid session ID or message ID");
+        CHAT_SDK_ERROR("Invalid session ID or message ID");
 
         return false;
     }
@@ -676,7 +676,7 @@ bool DataManager::insertMessage(
     std::string sql = "BEGIN IMMEDIATE";
     if(!executeSQL(sql))
     {
-        ERR("enable IMMEDIATE failed");
+        CHAT_SDK_ERROR("enable IMMEDIATE failed");
         return false;
     }
 
@@ -702,7 +702,7 @@ bool DataManager::insertMessage(
     sql = "COMMIT";
     if(!executeSQL(sql))
     {
-        ERR("commit failed");
+        CHAT_SDK_ERROR("commit failed");
         executeSQL("ROLLBACK;");
         return false;
     }
@@ -710,7 +710,7 @@ bool DataManager::insertMessage(
 
     // 输出成功日志并返回 true。
     // 日志只记录消息 ID 和会话 ID。
-    INF("insert message successfully: {}, {}",
+    CHAT_SDK_INFO("insert message successfully: {}, {}",
         message.id,
         sessionId
     );
@@ -774,7 +774,7 @@ bool DataManager::readMessagesUnlocked(
 
     // 判断整个查询是否成功完成
     if (rc != SQLITE_DONE) {
-        ERR("Failed to query messages: {}",
+        CHAT_SDK_ERROR("Failed to query messages: {}",
             sqlite3_errmsg(_db));
 
         return false;
@@ -828,7 +828,7 @@ bool DataManager::deleteMessagesBySessionId(
         return false;
     }
 
-    INF("Deleted all messages for session: {}", sessionId);
+    CHAT_SDK_INFO("Deleted all messages for session: {}", sessionId);
 
     return true;
 }

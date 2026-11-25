@@ -1,6 +1,6 @@
 #include "ChatSDK.h"
 
-#include <bite_scaffold/log.h>
+#include "Log.h"
 
 #include <iostream>
 #include <cstdlib>
@@ -89,11 +89,11 @@ bool testModel(
 
     if (sessionId.empty())
     {
-        ERR("Failed to create session: {}", modelName);
+        CHAT_SDK_ERROR("Failed to create session: {}", modelName);
         return false;
     }
 
-    INF("Create session passed");
+    CHAT_SDK_INFO("Create session passed");
 
 
     // 2. 普通聊天
@@ -111,13 +111,13 @@ bool testModel(
 
     if (response.empty())
     {
-        ERR("Normal response failed: {}", modelName);
+        CHAT_SDK_ERROR("Normal response failed: {}", modelName);
         return false;
     }
 
     std::cout << "[assistant] " << response << '\n';
 
-    INF("Normal response passed");
+    CHAT_SDK_INFO("Normal response passed");
 
 
     // 3. 验证普通聊天历史
@@ -130,11 +130,11 @@ bool testModel(
         session->messages[1].role != "assistant" ||
         session->messages[1].content != response)
     {
-        ERR("Normal chat history failed: {}", modelName);
+        CHAT_SDK_ERROR("Normal chat history failed: {}", modelName);
         return false;
     }
 
-    INF("Normal chat history passed");
+    CHAT_SDK_INFO("Normal chat history passed");
 
 
     // 4. 流式聊天
@@ -187,29 +187,29 @@ bool testModel(
 
     if (streamResponse.empty())
     {
-        ERR("Stream response failed: {}", modelName);
+        CHAT_SDK_ERROR("Stream response failed: {}", modelName);
         return false;
     }
 
-    INF("Stream response passed");
+    CHAT_SDK_INFO("Stream response passed");
 
     if (doneCount != 1)
     {
-        ERR("Invalid completion callback count: {}",
+        CHAT_SDK_ERROR("Invalid completion callback count: {}",
             doneCount);
 
         return false;
     }
 
-    INF("Stream completion callback passed");
+    CHAT_SDK_INFO("Stream completion callback passed");
 
     if (!savedWhenDone)
     {
-        ERR("Message saved before callback failed");
+        CHAT_SDK_ERROR("Message saved before callback failed");
         return false;
     }
 
-    INF("Message saved before completion callback passed");
+    CHAT_SDK_INFO("Message saved before completion callback passed");
 
 
     // 5. 验证完整历史消息
@@ -222,29 +222,29 @@ bool testModel(
         session->messages[3].role != "assistant" ||
         session->messages[3].content != streamResponse)
     {
-        ERR("Stream chat history failed: {}", modelName);
+        CHAT_SDK_ERROR("Stream chat history failed: {}", modelName);
         return false;
     }
 
-    INF("Stream chat history passed");
+    CHAT_SDK_INFO("Stream chat history passed");
 
 
     // 6. 删除测试会话
     if (!sdk.deleteSession(sessionId))
     {
-        ERR("Delete session failed: {}", modelName);
+        CHAT_SDK_ERROR("Delete session failed: {}", modelName);
         return false;
     }
 
     if (sdk.getSession(sessionId) != nullptr)
     {
-        ERR("Deleted session still exists: {}", modelName);
+        CHAT_SDK_ERROR("Deleted session still exists: {}", modelName);
         return false;
     }
 
-    INF("Delete session passed");
+    CHAT_SDK_INFO("Delete session passed");
 
-    INF("All tests passed for model: {}", modelName);
+    CHAT_SDK_INFO("All tests passed for model: {}", modelName);
 
     return true;
 }
@@ -253,11 +253,11 @@ bool testModel(
 int main()
 {
     // 1. 初始化日志
-    bitelog::log_settings settings;
+    ai_chat_sdk::log::Settings settings;
 
     settings.async = false;
 
-    bitelog::bitelog_init(settings);
+    ai_chat_sdk::log::initialize(settings);
 
 
     // 2. 创建 SDK
@@ -269,7 +269,7 @@ int main()
 
     if (!sdk.initModels(configs))
     {
-        ERR("ChatSDK initialization failed");
+        CHAT_SDK_ERROR("ChatSDK initialization failed");
         return 1;
     }
 
@@ -312,7 +312,7 @@ int main()
         }
         catch (const std::exception& e)
         {
-            ERR("Model {} test exception: {}",
+            CHAT_SDK_ERROR("Model {} test exception: {}",
                 modelName, e.what());
 
             failedModels.push_back(modelName);
@@ -339,11 +339,11 @@ int main()
 
     if (failedModels.empty())
     {
-        INF("All multi-model tests passed!");
+        CHAT_SDK_INFO("All multi-model tests passed!");
         return 0;
     }
 
-    ERR("Some model tests failed");
+    CHAT_SDK_ERROR("Some model tests failed");
 
     return 1;
 }

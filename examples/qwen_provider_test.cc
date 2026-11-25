@@ -2,7 +2,7 @@
 #include "QwenProvider.h"
 #include "ILLMProvider.h"
 
-#include <bite_scaffold/log.h>
+#include "Log.h"
 
 #include <cstdlib>
 #include <exception>
@@ -17,15 +17,15 @@ using namespace ai_chat_sdk;
 int main()
 {
     // 1. 初始化日志
-    bitelog::log_settings settings;
+    ai_chat_sdk::log::Settings settings;
     settings.async = false;
-    bitelog::bitelog_init(settings);
+    ai_chat_sdk::log::initialize(settings);
 
     // 2. 获取 API Key
     const char* key = std::getenv("QWEN_API_KEY");
 
     if (!key || !*key) {
-        ERR("QWEN_API_KEY is missing");
+        CHAT_SDK_ERROR("QWEN_API_KEY is missing");
         return 1;
     }
 
@@ -40,11 +40,11 @@ int main()
 
     if (!provider->initModel(config) ||
         !provider->isAvailable()) {
-        ERR("QwenProvider initialization failed");
+        CHAT_SDK_ERROR("QwenProvider initialization failed");
         return 1;
     }
 
-    INF("Model initialized: {}", provider->getModelName());
+    CHAT_SDK_INFO("Model initialized: {}", provider->getModelName());
 
     // 4. 构造消息
     std::vector<Message> messages;
@@ -73,14 +73,14 @@ int main()
             provider->sendMessage(messages, params);
 
         if (answer.empty()) {
-            ERR("Qwen normal chat test failed");
+            CHAT_SDK_ERROR("Qwen normal chat test failed");
             return 1;
         }
 
         std::cout << answer << '\n';
         std::cout << "=================================\n";
 
-        INF("Qwen normal chat test passed");
+        CHAT_SDK_INFO("Qwen normal chat test passed");
 
 
         // ========== 测试二：SSE 流式聊天 ==========
@@ -112,19 +112,19 @@ int main()
         if (full_answer.empty() ||
             full_answer != streamed_answer ||
             done_count != 1) {
-            ERR("Qwen streaming chat test failed");
+            CHAT_SDK_ERROR("Qwen streaming chat test failed");
             return 1;
         }
 
-        INF("Qwen streaming chat test passed");
-        INF("Answer length: {} bytes", full_answer.size());
+        CHAT_SDK_INFO("Qwen streaming chat test passed");
+        CHAT_SDK_INFO("Answer length: {} bytes", full_answer.size());
 
     } catch (const std::exception& e) {
-        ERR("QwenProvider test exception: {}", e.what());
+        CHAT_SDK_ERROR("QwenProvider test exception: {}", e.what());
         return 1;
     }
 
-    INF("All QwenProvider tests passed!");
+    CHAT_SDK_INFO("All QwenProvider tests passed!");
 
     return 0;
 }

@@ -31,13 +31,19 @@ option(
 # 3. 查找第三方依赖
 # ========================================
 
-find_package(bite_scaffold CONFIG REQUIRED)
-
 find_package(OpenSSL REQUIRED)
 
 find_package(Threads REQUIRED)
 
 find_package(SQLite3 REQUIRED)
+find_package(spdlog CONFIG REQUIRED)
+find_package(jsoncpp CONFIG REQUIRED)
+
+find_path(CHAT_SDK_HTTPLIB_INCLUDE_DIR NAMES httplib.h)
+if(NOT CHAT_SDK_HTTPLIB_INCLUDE_DIR)
+    message(FATAL_ERROR
+        "Header-only cpp-httplib is required. Set CHAT_SDK_HTTPLIB_INCLUDE_DIR to the directory containing httplib.h.")
+endif()
 
 
 # ========================================
@@ -53,6 +59,8 @@ set(SDK_SOURCES
     sdk/src/SessionManager.cc
     sdk/src/DataManager.cc
     sdk/src/ChatSDK.cc
+    sdk/src/JsonUtil.cc
+    sdk/src/Log.cc
 )
 
 
@@ -98,11 +106,15 @@ target_compile_features(chat_sdk PUBLIC
 # 8. 设置头文件搜索路径
 # ========================================
 
-target_include_directories(chat_sdk PUBLIC
+target_include_directories(chat_sdk
+    PUBLIC
 
     $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/sdk/include>
 
     $<INSTALL_INTERFACE:${CMAKE_INSTALL_INCLUDEDIR}>
+
+    PRIVATE
+        ${CHAT_SDK_HTTPLIB_INCLUDE_DIR}
 )
 
 
@@ -110,7 +122,7 @@ target_include_directories(chat_sdk PUBLIC
 # 9. 设置预处理宏
 # ========================================
 
-target_compile_definitions(chat_sdk PUBLIC
+target_compile_definitions(chat_sdk PRIVATE
     CPPHTTPLIB_OPENSSL_SUPPORT
 )
 
@@ -123,11 +135,12 @@ target_link_libraries(chat_sdk
 
     PUBLIC
         SQLite::SQLite3
-        bite_scaffold::bite_scaffold
-        OpenSSL::SSL
-        OpenSSL::Crypto
+        JsonCpp::JsonCpp
+        spdlog::spdlog
 
     PRIVATE
+        OpenSSL::SSL
+        OpenSSL::Crypto
         Threads::Threads
 )
 
@@ -158,7 +171,6 @@ if(CHAT_SDK_BUILD_TESTS)
 
         target_link_libraries(${target} PRIVATE
             chat_sdk::chat_sdk
-            bite_scaffold::bite_scaffold
         )
 
     endforeach()

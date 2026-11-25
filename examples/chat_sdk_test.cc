@@ -1,6 +1,6 @@
 #include "ChatSDK.h"
 
-#include <bite_scaffold/log.h>
+#include "Log.h"
 
 #include <iostream>
 #include <stdexcept>
@@ -21,7 +21,7 @@ void check(
         throw std::runtime_error(name + " failed");
     }
 
-    INF("{} passed", name);
+    CHAT_SDK_INFO("{} passed", name);
 }
 
 
@@ -57,11 +57,11 @@ int main()
 {
     // ========== 1. 初始化日志 ==========
 
-    bitelog::log_settings settings;
+    ai_chat_sdk::log::Settings settings;
 
     settings.async = false;
 
-    bitelog::bitelog_init(settings);
+    ai_chat_sdk::log::initialize(settings);
 
 
     // ========== 2. 创建临时数据库 ==========
@@ -71,7 +71,7 @@ int main()
     int fd = mkstemp(path);
 
     if (fd == -1) {
-        ERR("Failed to create test database");
+        CHAT_SDK_ERROR("Failed to create test database");
         return 1;
     }
 
@@ -265,16 +265,16 @@ int main()
 
     auto current = sdk.getSession(sessionId);
 
-    INF("[DEBUG] Completion callback triggered");
+    CHAT_SDK_INFO("[DEBUG] Completion callback triggered");
 
-    INF("[DEBUG] Session exists: {}",
+    CHAT_SDK_INFO("[DEBUG] Session exists: {}",
         current != nullptr);
 
-    INF("[DEBUG] Stream response bytes: {}",
+    CHAT_SDK_INFO("[DEBUG] Stream response bytes: {}",
         streamResponse.size());
 
     if (current) {
-        INF("[DEBUG] Message count: {}",
+        CHAT_SDK_INFO("[DEBUG] Message count: {}",
             current->messages.size());
 
         if (!current->messages.empty()) {
@@ -282,19 +282,19 @@ int main()
             const auto& lastMessage =
                 current->messages.back();
 
-            INF("[DEBUG] Last message role: {}",
+            CHAT_SDK_INFO("[DEBUG] Last message role: {}",
                 lastMessage.role);
 
-            INF("[DEBUG] Last message bytes: {}",
+            CHAT_SDK_INFO("[DEBUG] Last message bytes: {}",
                 lastMessage.content.size());
 
-            INF("[DEBUG] Content matches: {}",
+            CHAT_SDK_INFO("[DEBUG] Content matches: {}",
                 lastMessage.content == streamResponse);
 
-            INF("[DEBUG] Saved content: [{}]",
+            CHAT_SDK_INFO("[DEBUG] Saved content: [{}]",
                 lastMessage.content);
 
-            INF("[DEBUG] Stream content: [{}]",
+            CHAT_SDK_INFO("[DEBUG] Stream content: [{}]",
                 streamResponse);
         }
     }
@@ -421,13 +421,13 @@ int main()
 
         std::remove(dbName.c_str());
 
-        INF("All ChatSDK tests passed!");
+        CHAT_SDK_INFO("All ChatSDK tests passed!");
 
     } catch (const std::exception& e) {
 
-        ERR("ChatSDK test failed: {}", e.what());
+        CHAT_SDK_ERROR("ChatSDK test failed: {}", e.what());
 
-        ERR("Test database: {}", dbName);
+        CHAT_SDK_ERROR("Test database: {}", dbName);
 
         return 1;
     }

@@ -1,6 +1,6 @@
 #include "SessionManager.h"
 
-#include <bite_scaffold/log.h>
+#include "Log.h"
 
 #include <iostream>
 #include <stdexcept>
@@ -19,7 +19,7 @@ void check(bool condition, const std::string& name)
         throw std::runtime_error(name + " failed");
     }
 
-    INF("{} passed", name);
+    CHAT_SDK_INFO("{} passed", name);
 }
 
 
@@ -43,7 +43,7 @@ bool executeTestSQL(
     );
 
     if (rc != SQLITE_OK) {
-        ERR("Test SQL failed: {}",
+        CHAT_SDK_ERROR("Test SQL failed: {}",
             error ? error : sqlite3_errmsg(db));
     }
 
@@ -58,11 +58,11 @@ int main()
 {
     // ========== 1. 初始化日志 ==========
 
-    bitelog::log_settings settings;
+    ai_chat_sdk::log::Settings settings;
 
     settings.async = false;
 
-    bitelog::bitelog_init(settings);
+    ai_chat_sdk::log::initialize(settings);
 
 
     // ========== 2. 创建临时数据库 ==========
@@ -72,7 +72,7 @@ int main()
     int fd = mkstemp(path);
 
     if (fd == -1) {
-        ERR("Failed to create temporary database");
+        CHAT_SDK_ERROR("Failed to create temporary database");
         return 1;
     }
 
@@ -355,13 +355,13 @@ R"(
         // 删除临时数据库
         std::remove(dbName.c_str());
 
-        INF("All session persistence tests passed!");
+        CHAT_SDK_INFO("All session persistence tests passed!");
 
     } catch (const std::exception& e) {
 
-        ERR("Session persistence test failed: {}", e.what());
+        CHAT_SDK_ERROR("Session persistence test failed: {}", e.what());
 
-        ERR("Test database: {}", dbName);
+        CHAT_SDK_ERROR("Test database: {}", dbName);
 
         return 1;
     }

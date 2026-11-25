@@ -2,8 +2,8 @@
 #include <iostream>
 #include <string>
 #include <functional>
-#include <bite_scaffold/json_util.h>
-#include <jsoncpp/json/json.h>
+#include "JsonUtil.h"
+#include <json/json.h>
 
 #include <algorithm>
 class SSEParser {
@@ -105,7 +105,7 @@ private:
     Json::Value root;
     std::string err;
 
-    if (!bitejson::unserialize(data, &root, &err)) {
+    if (!ai_chat_sdk::json::unserialize(data, &root, &err)) {
         failed_ = true;
         error_message_ = "JSON parse failed: " + err;
 

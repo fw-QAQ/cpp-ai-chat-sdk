@@ -1,8 +1,8 @@
 
 #include "../include/ChatGPTProvider.h"
 
-#include <bite_scaffold/log.h>
-#include <bite_scaffold/json_util.h>
+#include "Log.h"
+#include "JsonUtil.h"
 
 #include <httplib.h>
 #include <algorithm>
@@ -30,7 +30,7 @@ bool ChatGPTProvider::initModel(
 
     if (key_it == model_config.end() ||
         key_it->second.empty()) {
-        ERR("ChatGPTProvider: api_key is missing");
+        CHAT_SDK_ERROR("ChatGPTProvider: api_key is missing");
         return false;
     }
 
@@ -43,7 +43,7 @@ bool ChatGPTProvider::initModel(
         : endpoint_it->second;
 
     if (_endpoint.empty()) {
-        ERR("ChatGPTProvider: endpoint is empty");
+        CHAT_SDK_ERROR("ChatGPTProvider: endpoint is empty");
         return false;
     }
 
@@ -54,7 +54,7 @@ bool ChatGPTProvider::initModel(
 
     _isAvailable = true;
 
-    INF("ChatGPTProvider initialized: {}", _endpoint);
+    CHAT_SDK_INFO("ChatGPTProvider initialized: {}", _endpoint);
     return true;
 }
 
@@ -82,12 +82,12 @@ std::string ChatGPTProvider::sendMessage(
 ) {
     // 检查初始化状态
     if (!isAvailable()) {
-        ERR("ChatGPTProvider is not initialized");
+        CHAT_SDK_ERROR("ChatGPTProvider is not initialized");
         return "";
     }
 
     if (messages.empty()) {
-        ERR("ChatGPTProvider: messages is empty");
+        CHAT_SDK_ERROR("ChatGPTProvider: messages is empty");
         return "";
     }
 
@@ -107,7 +107,7 @@ std::string ChatGPTProvider::sendMessage(
         }
     }
     catch (const std::exception& e) {
-        ERR("Invalid GPT request parameter: {}", e.what());
+        CHAT_SDK_ERROR("Invalid GPT request parameter: {}", e.what());
         return "";
     }
 
@@ -142,8 +142,8 @@ std::string ChatGPTProvider::sendMessage(
     // 复用微服务脚手架的 JSON 序列化
     std::string request_body;
 
-    if (!bitejson::serialize(root, &request_body)) {
-        ERR("GPT request serialization failed");
+    if (!ai_chat_sdk::json::serialize(root, &request_body)) {
+        CHAT_SDK_ERROR("GPT request serialization failed");
         return "";
     }
 
@@ -167,14 +167,14 @@ std::string ChatGPTProvider::sendMessage(
     );
 
     if (!res) {
-        ERR("GPT network error: {}",
+        CHAT_SDK_ERROR("GPT network error: {}",
             httplib::to_string(res.error()));
         return "";
     }
 
     if (res->status != 200) {
-        ERR("GPT HTTP error: {}", res->status);
-        ERR("GPT error details: {}",
+        CHAT_SDK_ERROR("GPT HTTP error: {}", res->status);
+        CHAT_SDK_ERROR("GPT error details: {}",
             res->body.substr(0, 1024));
         return "";
     }
@@ -184,28 +184,28 @@ std::string ChatGPTProvider::sendMessage(
     Json::Value response;
     std::string err;
 
-    if (!bitejson::unserialize(
+    if (!ai_chat_sdk::json::unserialize(
             res->body, &response, &err)) {
-        ERR("GPT JSON parse failed: {}", err);
+        CHAT_SDK_ERROR("GPT JSON parse failed: {}", err);
         return "";
     }
 
     if (!response.isObject()) {
-        ERR("GPT response is not a JSON object");
+        CHAT_SDK_ERROR("GPT response is not a JSON object");
         return "";
     }
 
     // 防止把未完成的响应当成正常答案
     if (!response["status"].isString() ||
         response["status"].asString() != "completed") {
-        ERR("GPT response not completed");
+        CHAT_SDK_ERROR("GPT response not completed");
         return "";
     }
 
     // TODO 1:
     // 判断 response["output"] 是否为数组。
     if (!response["output"].isArray()) {
-        ERR("GPT response output is not an array");
+        CHAT_SDK_ERROR("GPT response output is not an array");
         return "";
     }
 
@@ -226,7 +226,7 @@ std::string ChatGPTProvider::sendMessage(
     if (!message.isObject() ||
         !message["type"].isString() ||
         message["type"].asString() != "message") {
-        ERR("ChatGPT response message is not found");
+        CHAT_SDK_ERROR("ChatGPT response message is not found");
         return "";
     }
 
@@ -245,7 +245,7 @@ std::string ChatGPTProvider::sendMessage(
     }
 
     if (result.empty()) {
-        ERR("ChatGPT response content is empty");
+        CHAT_SDK_ERROR("ChatGPT response content is empty");
         return "";
     }
 
@@ -263,7 +263,7 @@ std::string ChatGPTProvider::sendMessageStream(
 ) {
     // ========== 1. 检查模型状态 ==========
     if (!isAvailable() || messages.empty()) {
-        ERR("GPT stream: provider unavailable or messages empty");
+        CHAT_SDK_ERROR("GPT stream: provider unavailable or messages empty");
         return "";
     }
 
@@ -276,12 +276,12 @@ std::string ChatGPTProvider::sendMessageStream(
             max_output_tokens = std::stoi(it->second);
         }
     } catch (const std::exception& e) {
-        ERR("Invalid GPT stream parameter: {}", e.what());
+        CHAT_SDK_ERROR("Invalid GPT stream parameter: {}", e.what());
         return "";
     }
 
     if (max_output_tokens <= 0) {
-        ERR("max_output_tokens must be positive");
+        CHAT_SDK_ERROR("max_output_tokens must be positive");
         return "";
     }
 
@@ -308,8 +308,8 @@ std::string ChatGPTProvider::sendMessageStream(
 
     std::string request_body;
 
-    if (!bitejson::serialize(root, &request_body)) {
-        ERR("GPT stream request serialization failed");
+    if (!ai_chat_sdk::json::serialize(root, &request_body)) {
+        CHAT_SDK_ERROR("GPT stream request serialization failed");
         return "";
     }
 
@@ -371,7 +371,7 @@ std::string ChatGPTProvider::sendMessageStream(
         Json::Value event;
         std::string err;
 
-        if (!bitejson::unserialize(event_data, &event, &err)) {
+        if (!ai_chat_sdk::json::unserialize(event_data, &event, &err)) {
             return fail("SSE JSON parse failed: " + err);
         }
 
@@ -535,27 +535,27 @@ std::string ChatGPTProvider::sendMessageStream(
 
     // 优先判断解析器错误
     if (stream_failed) {
-        ERR("GPT SSE error: {}", failure_reason);
+        CHAT_SDK_ERROR("GPT SSE error: {}", failure_reason);
         return "";
     }
 
     // 网络错误
     if (!res) {
-        ERR("GPT streaming network error: {}",
+        CHAT_SDK_ERROR("GPT streaming network error: {}",
             httplib::to_string(res.error()));
         return "";
     }
 
     // HTTP 错误
     if (res->status != 200) {
-        ERR("GPT streaming HTTP status: {}", res->status);
-        ERR("GPT streaming API error: {}", error_body);
+        CHAT_SDK_ERROR("GPT streaming HTTP status: {}", res->status);
+        CHAT_SDK_ERROR("GPT streaming API error: {}", error_body);
         return "";
     }
 
     // 没有收到完成事件
     if (!received_completed) {
-        ERR("GPT stream ended without response.completed");
+        CHAT_SDK_ERROR("GPT stream ended without response.completed");
         return "";
     }
 

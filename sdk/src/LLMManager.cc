@@ -1,6 +1,6 @@
 #include "LLMManager.h"
 
-#include <bite_scaffold/log.h>
+#include "Log.h"
 
 #include <utility>
 
@@ -14,12 +14,12 @@ bool LLMManager::registerProvider(
 ) {
     // 检查 name 是否为空，provider 是否为空。
     if (name.empty()) {
-        ERR("Provider name is empty");
+        CHAT_SDK_ERROR("Provider name is empty");
         return false;
     }
 
     if (!provider) {
-        ERR("Provider is null");
+        CHAT_SDK_ERROR("Provider is null");
         return false;
     }
 
@@ -30,7 +30,7 @@ bool LLMManager::registerProvider(
     _models.insert_or_assign(name, ModelInfo(name));
 
     // 输出注册成功日志并返回 true。
-    INF("Provider {} registered", name);
+    CHAT_SDK_INFO("Provider {} registered", name);
     return true;
 }
 
@@ -45,7 +45,7 @@ bool LLMManager::initModel(
     auto it = _providers.find(modelName);
 
     if (it == _providers.end()) {
-        ERR("Model {} is not registered", modelName);
+        CHAT_SDK_ERROR("Model {} is not registered", modelName);
         return false;
     }
 
@@ -59,7 +59,7 @@ bool LLMManager::initModel(
     info._isAvailable = ret;
 
     if (!ret) {
-        ERR("Model {} initialization failed", modelName);
+        CHAT_SDK_ERROR("Model {} initialization failed", modelName);
         return false;
     }
 
@@ -79,7 +79,7 @@ bool LLMManager::initModel(
         }
     }
 
-    INF("Model {} initialized successfully", modelName);
+    CHAT_SDK_INFO("Model {} initialized successfully", modelName);
 
     return true;
 }
@@ -112,7 +112,7 @@ bool LLMManager::isModelAvailable(
     // 如果模型存在且 _isAvailable 为 true，
     // 则返回 true，否则返回 false。
     if(_models.find(modelName) == _models.end()) {
-        ERR("Model {} is not registered", modelName);
+        CHAT_SDK_ERROR("Model {} is not registered", modelName);
         return false;
     }
     return _models.at(modelName)._isAvailable;
@@ -130,13 +130,13 @@ std::string LLMManager::sendMessage(
     auto it = _providers.find(modelName);
 
     if (it == _providers.end()) {
-        ERR("Model {} is not registered", modelName);
+        CHAT_SDK_ERROR("Model {} is not registered", modelName);
         return "";
     }
 
     // 检查模型是否可用
     if (!it->second->isAvailable()) {
-        ERR("Model {} is not available", modelName);
+        CHAT_SDK_ERROR("Model {} is not available", modelName);
         return "";
     }
 
@@ -160,13 +160,13 @@ std::string LLMManager::sendMessageStream(
     auto it = _providers.find(modelName);
 
     if (it == _providers.end()) {
-        ERR("Model {} is not registered", modelName);
+        CHAT_SDK_ERROR("Model {} is not registered", modelName);
         return "";
     }
 
     // 检查模型是否可用
     if (!it->second->isAvailable()) {
-        ERR("Model {} is not available", modelName);
+        CHAT_SDK_ERROR("Model {} is not available", modelName);
         return "";
     }
 

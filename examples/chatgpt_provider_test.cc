@@ -1,7 +1,7 @@
 
 #include "../sdk/include/ChatGPTProvider.h"
 
-#include <bite_scaffold/log.h>
+#include "Log.h"
 
 #include <cstdlib>
 #include <iostream>
@@ -15,15 +15,15 @@ using namespace ai_chat_sdk;
 int main()
 {
     // 初始化日志
-    bitelog::log_settings settings;
+    ai_chat_sdk::log::Settings settings;
     settings.async = false;
-    bitelog::bitelog_init(settings);
+    ai_chat_sdk::log::initialize(settings);
 
     // 从环境变量读取 API Key
     const char* key = std::getenv("OPENAI_API_KEY");
 
     if (!key || !*key) {
-        ERR("OPENAI_API_KEY is missing");
+        CHAT_SDK_ERROR("OPENAI_API_KEY is missing");
         return 1;
     }
 
@@ -38,11 +38,11 @@ int main()
 
     if (!provider->initModel(config) ||
         !provider->isAvailable()) {
-        ERR("ChatGPTProvider initialization failed");
+        CHAT_SDK_ERROR("ChatGPTProvider initialization failed");
         return 1;
     }
 
-    INF("Model initialized: {}", provider->getModelName());
+    CHAT_SDK_INFO("Model initialized: {}", provider->getModelName());
 
     // 构造聊天消息
     std::vector<Message> messages;
@@ -66,7 +66,7 @@ int main()
         provider->sendMessage(messages, params);
 
     if (answer.empty()) {
-        ERR("ChatGPTProvider test failed");
+        CHAT_SDK_ERROR("ChatGPTProvider test failed");
         return 1;
     }
 
@@ -75,7 +75,7 @@ int main()
     std::cout << "================================\n";
 
 
-    INF("ChatGPTProvider integration test passed");
+    CHAT_SDK_INFO("ChatGPTProvider integration test passed");
     // ========== GPT 流式聊天测试 ==========
 
 std::string streamed_answer;
@@ -103,14 +103,14 @@ std::cout << "===================================\n";
 if (full_answer.empty() ||
     full_answer != streamed_answer ||
     done_count != 1) {
-    ERR("ChatGPTProvider streaming test failed");
+    CHAT_SDK_ERROR("ChatGPTProvider streaming test failed");
     return 1;
 }
 
-INF("ChatGPTProvider streaming test passed");
-INF("Answer length: {} bytes", full_answer.size());
+CHAT_SDK_INFO("ChatGPTProvider streaming test passed");
+CHAT_SDK_INFO("Answer length: {} bytes", full_answer.size());
 
-INF("All ChatGPTProvider tests passed!");
+CHAT_SDK_INFO("All ChatGPTProvider tests passed!");
 
     return 0;
 }

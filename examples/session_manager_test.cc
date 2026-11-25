@@ -1,6 +1,6 @@
 #include "SessionManager.h"
 
-#include <bite_scaffold/log.h>
+#include "Log.h"
 
 #include <iostream>
 #include <set>
@@ -12,11 +12,11 @@ using namespace ai_chat_sdk;
 bool check(bool condition, const std::string& name)
 {
     if (!condition) {
-        ERR("{} failed", name);
+        CHAT_SDK_ERROR("{} failed", name);
         return false;
     }
 
-    INF("{} passed", name);
+    CHAT_SDK_INFO("{} passed", name);
 
     return true;
 }
@@ -25,10 +25,10 @@ int main()
 {
     // ========== 1. 初始化日志 ==========
 
-    bitelog::log_settings settings;
+    ai_chat_sdk::log::Settings settings;
     settings.async = false;
 
-    bitelog::bitelog_init(settings);
+    ai_chat_sdk::log::initialize(settings);
 
 
     // ========== 2. 创建会话管理器 ==========
@@ -109,7 +109,7 @@ int main()
         return 1;
     }
 
-    INF("Add messages passed");
+    CHAT_SDK_INFO("Add messages passed");
 
 
     // ========== 6. 获取历史消息 ==========
@@ -144,7 +144,7 @@ int main()
 
     for (const auto& message : history1) {
         if (message.id.empty()) {
-            ERR("Empty message ID");
+            CHAT_SDK_ERROR("Empty message ID");
             return 1;
         }
 
@@ -153,7 +153,7 @@ int main()
 
     for (const auto& message : history2) {
         if (message.id.empty()) {
-            ERR("Empty message ID");
+            CHAT_SDK_ERROR("Empty message ID");
             return 1;
         }
 
@@ -208,7 +208,7 @@ int main()
             manager.getSession(session_ids[i]);
 
         if (!current) {
-            ERR("Invalid session in session list");
+            CHAT_SDK_ERROR("Invalid session in session list");
             return 1;
         }
 
@@ -221,7 +221,7 @@ int main()
 if (previous->updated_at <
     current->updated_at) {
 
-    ERR("Session sorting failed");
+    CHAT_SDK_ERROR("Session sorting failed");
     return 1;
 }
         }
@@ -241,7 +241,7 @@ if (previous->updated_at <
         std::cout << "----------------------------------\n";
     }
 
-    INF("Session sorting passed");
+    CHAT_SDK_INFO("Session sorting passed");
 
 
     // ========== 10. 测试不存在的会话 ==========
@@ -284,7 +284,7 @@ if (previous->updated_at <
         return 1;
     }
 
-    INF("All SessionManager tests passed!");
+    CHAT_SDK_INFO("All SessionManager tests passed!");
 
     return 0;
 }

@@ -1,6 +1,6 @@
 #include "SessionManager.h"
 
-#include <bite_scaffold/log.h>
+#include "Log.h"
 
 #include <chrono>
 #include <sstream>
@@ -101,7 +101,7 @@ SessionManager::SessionManager(
         _sessions[session->id] = session;
     }
 
-    INF(
+    CHAT_SDK_INFO(
         "SessionManager initialized, session count: {}",
         _sessions.size()
     );
@@ -113,7 +113,7 @@ std::string SessionManager::createSession(
     std::lock_guard<std::mutex> lock(_mutex);
 
     if (model_name.empty()) {
-        ERR("Invalid model name");
+        CHAT_SDK_ERROR("Invalid model name");
         return "";
     }
 
@@ -140,7 +140,7 @@ std::string SessionManager::createSession(
     // 将会话 ID 添加到 _loadedSessions。
     _loadedSessions.insert(session_id);
 
-    INF(
+    CHAT_SDK_INFO(
         "Created persistent session: {}, model: {}",
         session_id,
         model_name
@@ -206,7 +206,7 @@ bool SessionManager::addMessage(
     auto session = loadSessionUnlocked(session_id);
 
     if (!session) {
-        ERR("Session not found: {}", session_id);
+        CHAT_SDK_ERROR("Session not found: {}", session_id);
         return false;
     }
 
@@ -243,7 +243,7 @@ bool SessionManager::addMessage(
     // 可以使用 std::move() 转移消息对象。
     session->messages.push_back(std::move(new_message));
 
-    INF("Added persistent message to session: {}",
+    CHAT_SDK_INFO("Added persistent message to session: {}",
         session_id);
 
     return true;
@@ -282,7 +282,7 @@ bool SessionManager::deleteSession(
     // 首先删除数据库中的会话
     // 历史消息会通过外键约束级联删除
     if (!_dataManager.deleteSession(session_id)) {
-        ERR("Failed to delete session: {}", session_id);
+        CHAT_SDK_ERROR("Failed to delete session: {}", session_id);
         return false;
     }
 
@@ -292,7 +292,7 @@ bool SessionManager::deleteSession(
     // 删除加载状态
     _loadedSessions.erase(session_id);
 
-    INF("Deleted persistent session: {}", session_id);
+    CHAT_SDK_INFO("Deleted persistent session: {}", session_id);
 
     return true;
 }
@@ -309,7 +309,7 @@ void SessionManager::updateSessionTimestamp(
     if (!_dataManager.updateSessionTimestamp(
             session_id, timestamp)) {
 
-        ERR("Failed to update persistent session: {}",
+        CHAT_SDK_ERROR("Failed to update persistent session: {}",
             session_id);
 
         return;
@@ -329,7 +329,7 @@ void SessionManager::clearAllSessions()
 
     // 清空持久化数据
     if (!_dataManager.clearAllSessions()) {
-        ERR("Failed to clear persistent sessions");
+        CHAT_SDK_ERROR("Failed to clear persistent sessions");
         return;
     }
 
@@ -339,7 +339,7 @@ void SessionManager::clearAllSessions()
     // 清空加载状态
     _loadedSessions.clear();
 
-    INF("Cleared all persistent sessions");
+    CHAT_SDK_INFO("Cleared all persistent sessions");
 }
 
 size_t SessionManager::getSessionCount() const

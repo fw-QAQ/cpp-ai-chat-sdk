@@ -1,7 +1,7 @@
 #include "OllamaProvider.h"
 
-#include <bite_scaffold/log.h>
-#include <bite_scaffold/json_util.h>
+#include "Log.h"
+#include "JsonUtil.h"
 
 #include <httplib.h>
 
@@ -25,7 +25,7 @@ bool OllamaProvider::initModel(
     auto it = model_config.find("model_name");
 
     if (it == model_config.end() || it->second.empty()) {
-        ERR("Ollama model name is empty");
+        CHAT_SDK_ERROR("Ollama model name is empty");
         return false;
     }
 
@@ -35,7 +35,7 @@ bool OllamaProvider::initModel(
     it = model_config.find("model_desc");
 
     if (it == model_config.end() || it->second.empty()) {
-        ERR("Ollama model description is empty");
+        CHAT_SDK_ERROR("Ollama model description is empty");
         return false;
     }
 
@@ -45,7 +45,7 @@ bool OllamaProvider::initModel(
     it = model_config.find("endpoint");
 
     if (it == model_config.end() || it->second.empty()) {
-        ERR("Ollama endpoint is empty");
+        CHAT_SDK_ERROR("Ollama endpoint is empty");
         return false;
     }
 
@@ -57,14 +57,14 @@ bool OllamaProvider::initModel(
     }
 
     if (_endpoint.empty()) {
-        ERR("Invalid Ollama endpoint");
+        CHAT_SDK_ERROR("Invalid Ollama endpoint");
         return false;
     }
 
     _isAvailable = true;
 
-    INF("Ollama provider initialized: {}", _endpoint);
-    INF("Ollama model: {}", _model_name);
+    CHAT_SDK_INFO("Ollama provider initialized: {}", _endpoint);
+    CHAT_SDK_INFO("Ollama model: {}", _model_name);
 
     return true;
 }
@@ -112,7 +112,7 @@ bool buildRequestBody(
             );
         }
     } catch (const std::exception& e) {
-        ERR("Invalid Ollama request parameter: {}", e.what());
+        CHAT_SDK_ERROR("Invalid Ollama request parameter: {}", e.what());
         return false;
     }
 
@@ -123,7 +123,7 @@ bool buildRequestBody(
         max_tokens <= 0 ||
         num_ctx <= 0) {
 
-        ERR("Invalid Ollama generation options");
+        CHAT_SDK_ERROR("Invalid Ollama generation options");
         return false;
     }
 
@@ -156,7 +156,7 @@ bool buildRequestBody(
     root["keep_alive"] = "5m";
 
     // 复用微服务脚手架
-    return bitejson::serialize(root, request_body);
+    return ai_chat_sdk::json::serialize(root, request_body);
 }
 
 } // anonymous namespace
@@ -165,12 +165,12 @@ std::string OllamaProvider::sendMessage(
     const std::map<std::string, std::string>& request_param
 ) {
     if (!isAvailable()) {
-        ERR("OllamaProvider is not initialized");
+        CHAT_SDK_ERROR("OllamaProvider is not initialized");
         return "";
     }
 
     if (messages.empty()) {
-        ERR("Ollama messages is empty");
+        CHAT_SDK_ERROR("Ollama messages is empty");
         return "";
     }
 
@@ -184,7 +184,7 @@ std::string OllamaProvider::sendMessage(
             false,
             &request_body)) {
 
-        ERR("Failed to build Ollama request");
+        CHAT_SDK_ERROR("Failed to build Ollama request");
         return "";
     }
 
@@ -204,15 +204,15 @@ std::string OllamaProvider::sendMessage(
 
     // 4. 网络错误处理
     if (!res) {
-        ERR("Ollama network error: {}",
+        CHAT_SDK_ERROR("Ollama network error: {}",
             httplib::to_string(res.error()));
         return "";
     }
 
     // 5. HTTP 状态码校验
     if (res->status != 200) {
-        ERR("Ollama HTTP error: {}", res->status);
-        ERR("Ollama error details: {}",
+        CHAT_SDK_ERROR("Ollama HTTP error: {}", res->status);
+        CHAT_SDK_ERROR("Ollama error details: {}",
             res->body.substr(0, 1024));
 
         return "";
@@ -222,28 +222,28 @@ std::string OllamaProvider::sendMessage(
     Json::Value response;
     std::string err;
 
-    if (!bitejson::unserialize(
+    if (!ai_chat_sdk::json::unserialize(
             res->body, &response, &err)) {
 
-        ERR("Ollama JSON parse failed: {}", err);
+        CHAT_SDK_ERROR("Ollama JSON parse failed: {}", err);
         return "";
     }
 
     // 7. 检查响应结构
     if (!response.isObject()) {
-        ERR("Invalid Ollama response object");
+        CHAT_SDK_ERROR("Invalid Ollama response object");
         return "";
     }
 
     if (response.isMember("error")) {
-        ERR("Ollama returned an error");
+        CHAT_SDK_ERROR("Ollama returned an error");
         return "";
     }
 
     if (!response["done"].isBool() ||
         !response["done"].asBool()) {
 
-        ERR("Ollama response is not completed");
+        CHAT_SDK_ERROR("Ollama response is not completed");
         return "";
     }
 
@@ -253,7 +253,7 @@ std::string OllamaProvider::sendMessage(
     if (!message.isObject() ||
         !message["content"].isString()) {
 
-        ERR("Invalid Ollama message format");
+        CHAT_SDK_ERROR("Invalid Ollama message format");
         return "";
     }
 
@@ -265,7 +265,7 @@ std::string OllamaProvider::sendMessageStream(
     std::function<void(const std::string&, bool)> callback
 ) {
     if (!isAvailable() || messages.empty()) {
-        ERR("Ollama provider unavailable or messages empty");
+        CHAT_SDK_ERROR("Ollama provider unavailable or messages empty");
         return "";
     }
 
@@ -280,7 +280,7 @@ std::string OllamaProvider::sendMessageStream(
             true,
             &request_body)) {
 
-        ERR("Failed to build Ollama stream request");
+        CHAT_SDK_ERROR("Failed to build Ollama stream request");
         return "";
     }
 
@@ -386,7 +386,7 @@ std::string OllamaProvider::sendMessageStream(
                     continue;
                 }
 
-                // 使用 bitejson::unserialize()
+                // 使用 ai_chat_sdk::json::unserialize()
                 // 将 jsonLine 转换成 Json::Value。
                 //
                 // 如果解析失败：
@@ -395,7 +395,7 @@ std::string OllamaProvider::sendMessageStream(
                 Json::Value response;
                 std::string err;
 
-                if (!bitejson::unserialize(jsonLine, &response, &err)) {
+                if (!ai_chat_sdk::json::unserialize(jsonLine, &response, &err)) {
                     got_error = true;
                     error_message = "Failed to parse JSON: " + err;
                     return false;
@@ -409,14 +409,14 @@ std::string OllamaProvider::sendMessageStream(
                     response["error"].isString()) {
                     got_error = true;
                     error_message = response["error"].asString();
-                    ERR("Ollama NDJSON error: {}", error_message);
+                    CHAT_SDK_ERROR("Ollama NDJSON error: {}", error_message);
                     return false;
                 }
 
                 // 检查 done 字段是否为布尔类型。
                 if (!response.isObject() ||
                     !response["done"].isBool()) {
-                    ERR("Ollama NDJSON done field not boolean");
+                    CHAT_SDK_ERROR("Ollama NDJSON done field not boolean");
                     continue;
                 }
 
@@ -459,13 +459,13 @@ std::string OllamaProvider::sendMessageStream(
 
     // 优先处理解析错误
     if (got_error) {
-        ERR("Ollama NDJSON error: {}", error_message);
+        CHAT_SDK_ERROR("Ollama NDJSON error: {}", error_message);
         return "";
     }
 
     // 网络错误
     if (!res) {
-        ERR("Ollama streaming network error: {}",
+        CHAT_SDK_ERROR("Ollama streaming network error: {}",
             httplib::to_string(res.error()));
 
         return "";
@@ -473,17 +473,17 @@ std::string OllamaProvider::sendMessageStream(
 
     // HTTP 错误
     if (res->status != 200) {
-        ERR("Ollama streaming HTTP error: {}",
+        CHAT_SDK_ERROR("Ollama streaming HTTP error: {}",
             res->status);
 
-        ERR("Ollama streaming error: {}", error_body);
+        CHAT_SDK_ERROR("Ollama streaming error: {}", error_body);
 
         return "";
     }
 
     // 没有收到 done: true
     if (!stream_finished) {
-        ERR("Ollama stream ended without done=true");
+        CHAT_SDK_ERROR("Ollama stream ended without done=true");
         return "";
     }
 

@@ -5,7 +5,7 @@
 #include "QwenProvider.h"
 #include "OllamaProvider.h"
 
-#include <bite_scaffold/log.h>
+#include "Log.h"
 
 #include <memory>
 #include <utility>
@@ -16,18 +16,18 @@ namespace ai_chat_sdk {
 ChatSDK::ChatSDK(const std::string& dbName)
     : _sessionManager(dbName)
 {
-    INF("ChatSDK created");
+    CHAT_SDK_INFO("ChatSDK created");
 }
 bool ChatSDK::initModels(
     const std::vector<std::shared_ptr<Config>>& configs
 ) {
     if (_initialized) {
-        ERR("ChatSDK has already been initialized");
+        CHAT_SDK_ERROR("ChatSDK has already been initialized");
         return false;
     }
 
     if (configs.empty()) {
-        ERR("Model configs cannot be empty");
+        CHAT_SDK_ERROR("Model configs cannot be empty");
         return false;
     }
 
@@ -37,12 +37,12 @@ bool ChatSDK::initModels(
     for (const auto& config : configs) {
 
         if (!config || config->model_name.empty()) {
-            ERR("Invalid model config");
+            CHAT_SDK_ERROR("Invalid model config");
             return false;
         }
 
         if (!modelNames.insert(config->model_name).second) {
-            ERR("Duplicate model config: {}",
+            CHAT_SDK_ERROR("Duplicate model config: {}",
                 config->model_name);
 
             return false;
@@ -59,11 +59,11 @@ bool ChatSDK::initModels(
     _initialized = !_configs.empty();
 
     if (!_initialized) {
-        ERR("No model initialized successfully");
+        CHAT_SDK_ERROR("No model initialized successfully");
         return false;
     }
 
-    INF("ChatSDK initialized, available models: {}",
+    CHAT_SDK_INFO("ChatSDK initialized, available models: {}",
         _configs.size());
 
     return true;
@@ -99,7 +99,7 @@ void ChatSDK::registerAllProvider(
 
             } else {
 
-                ERR("Unsupported API model: {}", modelName);
+                CHAT_SDK_ERROR("Unsupported API model: {}", modelName);
 
                 continue;
             }
@@ -114,7 +114,7 @@ void ChatSDK::registerAllProvider(
 
         } else {
 
-            ERR("Unsupported config type: {}", modelName);
+            CHAT_SDK_ERROR("Unsupported config type: {}", modelName);
 
             continue;
         }
@@ -124,12 +124,12 @@ void ChatSDK::registerAllProvider(
                 modelName,
                 std::move(provider))) {
 
-            ERR("Failed to register provider: {}", modelName);
+            CHAT_SDK_ERROR("Failed to register provider: {}", modelName);
 
             continue;
         }
 
-        INF("Registered provider: {}", modelName);
+        CHAT_SDK_INFO("Registered provider: {}", modelName);
     }
 }
 
@@ -161,14 +161,14 @@ void ChatSDK::initProviders(
 
         } else {
 
-            ERR("Unknown config type: {}",
+            CHAT_SDK_ERROR("Unknown config type: {}",
                 config->model_name);
 
             continue;
         }
 
         if (!success) {
-            ERR("Failed to initialize model: {}",
+            CHAT_SDK_ERROR("Failed to initialize model: {}",
                 config->model_name);
         }
     }
@@ -181,14 +181,14 @@ bool ChatSDK::apiProviderInit(
     // 1. 参数检查
     if (modelName.empty() || !apiConfig) {
 
-        ERR("Invalid API model config");
+        CHAT_SDK_ERROR("Invalid API model config");
 
         return false;
     }
 
     if (apiConfig->api_key.empty()) {
 
-        ERR("API key is required for model: {}", modelName);
+        CHAT_SDK_ERROR("API key is required for model: {}", modelName);
 
         return false;
     }
@@ -227,7 +227,7 @@ bool ChatSDK::apiProviderInit(
             modelName,
             modelParams)) {
 
-        ERR("Failed to initialize API model: {}", modelName);
+        CHAT_SDK_ERROR("Failed to initialize API model: {}", modelName);
 
         return false;
     }
@@ -236,7 +236,7 @@ bool ChatSDK::apiProviderInit(
     _configs[modelName] =
         std::make_shared<ApiConfig>(*apiConfig);
 
-    INF("API model initialized: {}", modelName);
+    CHAT_SDK_INFO("API model initialized: {}", modelName);
 
     return true;
 }
@@ -248,14 +248,14 @@ bool ChatSDK::ollamaProviderInit(
     // 1. 检查参数
     if (modelName.empty() || !ollamaConfig) {
 
-        ERR("Invalid Ollama config");
+        CHAT_SDK_ERROR("Invalid Ollama config");
 
         return false;
     }
 
     if (ollamaConfig->endpoint.empty()) {
 
-        ERR("Ollama endpoint is required");
+        CHAT_SDK_ERROR("Ollama endpoint is required");
 
         return false;
     }
@@ -277,7 +277,7 @@ bool ChatSDK::ollamaProviderInit(
             modelName,
             modelParams)) {
 
-        ERR("Failed to initialize Ollama model: {}", modelName);
+        CHAT_SDK_ERROR("Failed to initialize Ollama model: {}", modelName);
 
         return false;
     }
@@ -286,7 +286,7 @@ bool ChatSDK::ollamaProviderInit(
     _configs[modelName] =
         std::make_shared<OllamaConfig>(*ollamaConfig);
 
-    INF("Ollama model initialized: {}", modelName);
+    CHAT_SDK_INFO("Ollama model initialized: {}", modelName);
 
     return true;
 }
@@ -295,7 +295,7 @@ std::string ChatSDK::createSession(
     const std::string& modelName
 ) {
     if (!_initialized) {
-        ERR("ChatSDK is not initialized");
+        CHAT_SDK_ERROR("ChatSDK is not initialized");
         return "";
     }
 
@@ -303,7 +303,7 @@ std::string ChatSDK::createSession(
     if (!_llmManager.isModelAvailable(modelName) ||
         _configs.find(modelName) == _configs.end()) {
 
-        ERR("Model is not available: {}", modelName);
+        CHAT_SDK_ERROR("Model is not available: {}", modelName);
 
         return "";
     }
@@ -314,12 +314,12 @@ std::string ChatSDK::createSession(
 
     if (sessionId.empty()) {
 
-        ERR("Failed to create session");
+        CHAT_SDK_ERROR("Failed to create session");
 
         return "";
     }
 
-    INF("Created session: {}, model: {}",
+    CHAT_SDK_INFO("Created session: {}, model: {}",
         sessionId, modelName);
 
     return sessionId;
@@ -343,7 +343,7 @@ bool ChatSDK::deleteSession(
         _sessionManager.deleteSession(sessionId);
 
     if (result) {
-        INF("Deleted session: {}", sessionId);
+        CHAT_SDK_INFO("Deleted session: {}", sessionId);
     }
 
     return result;
@@ -361,12 +361,12 @@ std::string ChatSDK::sendMessage(
     // ========== 1. 检查 SDK 状态 ==========
 
     if (!_initialized) {
-        ERR("ChatSDK is not initialized");
+        CHAT_SDK_ERROR("ChatSDK is not initialized");
         return "";
     }
 
     if (message.empty()) {
-        ERR("Message cannot be empty");
+        CHAT_SDK_ERROR("Message cannot be empty");
         return "";
     }
 
@@ -377,7 +377,7 @@ std::string ChatSDK::sendMessage(
         _sessionManager.getSession(sessionId);
 
     if (!session) {
-        ERR("Session not found: {}", sessionId);
+        CHAT_SDK_ERROR("Session not found: {}", sessionId);
         return "";
     }
 
@@ -392,7 +392,7 @@ std::string ChatSDK::sendMessage(
     if (it == _configs.end() ||
         !_llmManager.isModelAvailable(modelName)) {
 
-        ERR("Model is not available: {}", modelName);
+        CHAT_SDK_ERROR("Model is not available: {}", modelName);
 
         return "";
     }
@@ -418,7 +418,7 @@ std::string ChatSDK::sendMessage(
     Message userMessage("user",message);
     if(!_sessionManager.addMessage(sessionId, userMessage))
     {
-        ERR("Failed to save user message");
+        CHAT_SDK_ERROR("Failed to save user message");
         return "";
     }
 
@@ -431,7 +431,7 @@ std::string ChatSDK::sendMessage(
         _sessionManager.getSessionHistory(sessionId);
 
     if (history.empty()) {
-        ERR("Failed to get session history");
+        CHAT_SDK_ERROR("Failed to get session history");
         return "";
     }
 
@@ -447,7 +447,7 @@ std::string ChatSDK::sendMessage(
             requestParams);
 
     if (response.empty()) {
-        ERR("Failed to send message to model");
+        CHAT_SDK_ERROR("Failed to send message to model");
         return "";
     }
 
@@ -458,7 +458,7 @@ std::string ChatSDK::sendMessage(
     Message assistantMessage("assistant",response);
     if(!_sessionManager.addMessage(sessionId, assistantMessage))
     {
-        ERR("Failed to save assistant message");
+        CHAT_SDK_ERROR("Failed to save assistant message");
         return "";
     }
 
@@ -466,7 +466,7 @@ std::string ChatSDK::sendMessage(
     // ========== 9. 返回模型回复 ==========
 
     // 输出成功日志并返回 response。
-    INF("Received response from model: {}", response);
+    CHAT_SDK_INFO("Received response from model: {}", response);
     return response;
 }
 
@@ -478,12 +478,12 @@ void ChatSDK::sendMessageStream(
     // ========== 1. 检查 SDK 状态 ==========
 
     if (!_initialized) {
-        ERR("ChatSDK is not initialized");
+        CHAT_SDK_ERROR("ChatSDK is not initialized");
         return;
     }
 
     if (message.empty() || !callback) {
-        ERR("Invalid message or callback");
+        CHAT_SDK_ERROR("Invalid message or callback");
         return;
     }
 
@@ -494,7 +494,7 @@ void ChatSDK::sendMessageStream(
         _sessionManager.getSession(sessionId);
 
     if (!session) {
-        ERR("Session not found: {}", sessionId);
+        CHAT_SDK_ERROR("Session not found: {}", sessionId);
         return;
     }
 
@@ -509,7 +509,7 @@ void ChatSDK::sendMessageStream(
     if (it == _configs.end() ||
         !_llmManager.isModelAvailable(modelName)) {
 
-        ERR("Model is not available: {}", modelName);
+        CHAT_SDK_ERROR("Model is not available: {}", modelName);
 
         return;
     }
@@ -532,7 +532,7 @@ void ChatSDK::sendMessageStream(
         Message userMessage = Message("user",message);
     if(!_sessionManager.addMessage(sessionId, userMessage))
     {
-        ERR("Failed to save user message");
+        CHAT_SDK_ERROR("Failed to save user message");
         return;
     }
 
@@ -544,7 +544,7 @@ void ChatSDK::sendMessageStream(
         _sessionManager.getSessionHistory(sessionId);
 
     if (history.empty()) {
-        ERR("Failed to get session history");
+        CHAT_SDK_ERROR("Failed to get session history");
         return;
     }
 
@@ -583,7 +583,7 @@ void ChatSDK::sendMessageStream(
     // 记录错误，不保存 assistant 消息，直接 return。
     if(!providerDone || response.empty())
     {
-        ERR("model response failed");
+        CHAT_SDK_ERROR("model response failed");
         return;
     }
 
@@ -596,7 +596,7 @@ void ChatSDK::sendMessageStream(
     Message assistantMessage("assistant",response);
     if(!_sessionManager.addMessage(sessionId, assistantMessage))
     {
-        ERR("Failed to save assistant message");
+        CHAT_SDK_ERROR("Failed to save assistant message");
         return;
     }
 
@@ -606,7 +606,7 @@ void ChatSDK::sendMessageStream(
     // 调用 callback("", true)。
     // 输出成功日志。
     callback("",true);
-    INF("get streamMessages successfully");
+    CHAT_SDK_INFO("get streamMessages successfully");
     return;
 }
 

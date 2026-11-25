@@ -1,6 +1,6 @@
 #include "OllamaProvider.h"
 
-#include <bite_scaffold/log.h>
+#include "Log.h"
 
 #include <cstdlib>
 #include <iostream>
@@ -12,16 +12,16 @@ using namespace ai_chat_sdk;
 
 int main()
 {
-    bitelog::log_settings settings;
+    ai_chat_sdk::log::Settings settings;
     settings.async = false;
-    bitelog::bitelog_init(settings);
+    ai_chat_sdk::log::initialize(settings);
 
     // 通过环境变量指定 Windows Ollama 地址
     const char* endpoint =
         std::getenv("OLLAMA_ENDPOINT");
 
     if (!endpoint || !*endpoint) {
-        ERR("OLLAMA_ENDPOINT is missing");
+        CHAT_SDK_ERROR("OLLAMA_ENDPOINT is missing");
         return 1;
     }
 
@@ -38,11 +38,11 @@ int main()
     if (!provider->initModel(config) ||
         !provider->isAvailable()) {
 
-        ERR("Ollama initialization failed");
+        CHAT_SDK_ERROR("Ollama initialization failed");
         return 1;
     }
 
-    INF("Model initialized: {}", provider->getModelName());
+    CHAT_SDK_INFO("Model initialized: {}", provider->getModelName());
 
     // 构造聊天消息
     std::vector<Message> messages;
@@ -71,14 +71,14 @@ int main()
         provider->sendMessage(messages, params);
 
     if (answer.empty()) {
-        ERR("Ollama normal chat test failed");
+        CHAT_SDK_ERROR("Ollama normal chat test failed");
         return 1;
     }
 
     std::cout << answer << '\n';
     std::cout << "=================================\n";
 
-    INF("Ollama normal chat test passed");
+    CHAT_SDK_INFO("Ollama normal chat test passed");
 
     // ========== 流式聊天测试 ==========
 
@@ -109,14 +109,14 @@ int main()
         full_answer != streamed_answer ||
         done_count != 1) {
 
-        ERR("Ollama streaming chat test failed");
+        CHAT_SDK_ERROR("Ollama streaming chat test failed");
         return 1;
     }
 
-    INF("Ollama streaming chat test passed");
-    INF("Answer length: {} bytes", full_answer.size());
+    CHAT_SDK_INFO("Ollama streaming chat test passed");
+    CHAT_SDK_INFO("Answer length: {} bytes", full_answer.size());
 
-    INF("All OllamaProvider tests passed!");
+    CHAT_SDK_INFO("All OllamaProvider tests passed!");
 
     return 0;
 }

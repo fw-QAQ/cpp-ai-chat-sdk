@@ -1,6 +1,6 @@
 #include "DataManager.h"
 
-#include <bite_scaffold/log.h>
+#include "Log.h"
 
 #include <iostream>
 #include <stdexcept>
@@ -19,7 +19,7 @@ void check(bool condition, const std::string& name)
         throw std::runtime_error(name + " failed");
     }
 
-    INF("{} passed", name);
+    CHAT_SDK_INFO("{} passed", name);
 }
 
 
@@ -79,7 +79,7 @@ bool executeTestSQL(
     );
 
     if (rc != SQLITE_OK) {
-        ERR("Test SQL failed: {}",
+        CHAT_SDK_ERROR("Test SQL failed: {}",
             errMsg ? errMsg : sqlite3_errmsg(db));
     }
 
@@ -95,11 +95,11 @@ int main()
 {
     // ========== 1. 初始化日志 ==========
 
-    bitelog::log_settings settings;
+    ai_chat_sdk::log::Settings settings;
 
     settings.async = false;
 
-    bitelog::bitelog_init(settings);
+    ai_chat_sdk::log::initialize(settings);
 
 
     // ========== 2. 创建临时数据库文件 ==========
@@ -109,7 +109,7 @@ int main()
     int fd = mkstemp(path);
 
     if (fd == -1) {
-        ERR("Failed to create temporary database file");
+        CHAT_SDK_ERROR("Failed to create temporary database file");
 
         return 1;
     }
@@ -483,14 +483,14 @@ R"(
         // 删除临时测试数据库
         std::remove(dbName.c_str());
 
-        INF("All DataManager tests passed!");
+        CHAT_SDK_INFO("All DataManager tests passed!");
 
     } catch (const std::exception& e) {
 
-        ERR("DataManager test failed: {}", e.what());
+        CHAT_SDK_ERROR("DataManager test failed: {}", e.what());
 
         // 保留失败数据库，方便排查
-        ERR("Test database: {}", dbName);
+        CHAT_SDK_ERROR("Test database: {}", dbName);
 
         return 1;
     }

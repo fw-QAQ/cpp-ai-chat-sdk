@@ -1,10 +1,10 @@
 #include "../include/DeepSeekProvider.h"
 #include "../include/SSEParser.h"
-#include <bite_scaffold/json_util.h>
-#include <bite_scaffold/log.h>
+#include "JsonUtil.h"
+#include "Log.h"
 
 #include <httplib.h>
-#include <jsoncpp/json/json.h>
+#include <json/json.h>
 
 #include <algorithm>
 #include <cstdint>
@@ -18,7 +18,7 @@ bool DeepSeekProvider::initModel(
   auto it = model_config.find("api_key");
 
   if (it == model_config.end() || it->second.empty()) {
-    ERR("DeepSeekProvider initialization failed: missing API key");
+    CHAT_SDK_ERROR("DeepSeekProvider initialization failed: missing API key");
     return false;
   }
   _api_key = it->second;
@@ -33,8 +33,8 @@ bool DeepSeekProvider::initModel(
 
   _endpoint = base_url;
   _isAvailable = true;
-  INF("Init success!!!!");
-  INF("DeepSeek provider initialized successfull whith endpoint: {}",
+  CHAT_SDK_INFO("Init success!!!!");
+  CHAT_SDK_INFO("DeepSeek provider initialized successfull whith endpoint: {}",
       _endpoint);
   return true;
 }
@@ -58,7 +58,7 @@ std::string DeepSeekProvider::sendMessage(
 
   // 检查模型是否已初始化。
   if (!isAvailable()) {
-    ERR("DeepSeekProvider sendMessage failed: model not initialized");
+    CHAT_SDK_ERROR("DeepSeekProvider sendMessage failed: model not initialized");
     return "";
   }
 
@@ -99,8 +99,8 @@ std::string DeepSeekProvider::sendMessage(
   // 使用已经封装的 JSON 序列化接口
   std::string request_body;
 
-  if (!bitejson::serialize(root, &request_body)) {
-    ERR("DeepSeek request JSON serialization failed");
+  if (!ai_chat_sdk::json::serialize(root, &request_body)) {
+    CHAT_SDK_ERROR("DeepSeek request JSON serialization failed");
     return "";
   }
 
@@ -113,20 +113,20 @@ std::string DeepSeekProvider::sendMessage(
   httplib::Result res = client.Post("/chat/completions", headers, request_body,
                                     "application/json");
   if (!res) {
-    ERR("Failed to connect to DeepSeek API - check network and SSL "
+    CHAT_SDK_ERROR("Failed to connect to DeepSeek API - check network and SSL "
         "configuration: {}",
         httplib::to_string(res.error()));
     return "";
   }
   if (res->status != 200) {
-    ERR("DeepSeek API response HTTP status code not 200: {}", res->status);
-    ERR("DeepSeek API error details: {}", res->body);
+    CHAT_SDK_ERROR("DeepSeek API response HTTP status code not 200: {}", res->status);
+    CHAT_SDK_ERROR("DeepSeek API error details: {}", res->body);
     return "";
   }
   std::string err;
   Json::Value response;
-  if (!bitejson::unserialize(res->body, &response, &err)) {
-    ERR("DeepSeekProvider sendMessage failed: JSON response deserialization "
+  if (!ai_chat_sdk::json::unserialize(res->body, &response, &err)) {
+    CHAT_SDK_ERROR("DeepSeekProvider sendMessage failed: JSON response deserialization "
         "failed: {}",
         err);
     return "";
@@ -134,7 +134,7 @@ std::string DeepSeekProvider::sendMessage(
 
   if (!response.isObject() || !response["choices"].isArray() ||
       response["choices"].empty()) {
-    ERR("DeepSeek response: invalid choices");
+    CHAT_SDK_ERROR("DeepSeek response: invalid choices");
     return "";
   }
 
@@ -142,7 +142,7 @@ std::string DeepSeekProvider::sendMessage(
 
   if (!choice.isObject() || !choice["message"].isObject() ||
       !choice["message"]["content"].isString()) {
-    ERR("DeepSeek response: invalid message content");
+    CHAT_SDK_ERROR("DeepSeek response: invalid message content");
     return "";
   }
 
@@ -156,7 +156,7 @@ std::string DeepSeekProvider::sendMessageStream(
 
   // 检查模型是否初始化、messages 是否为空。
       if (!isAvailable()) {
-    ERR("DeepSeekProvider sendMessage failed: model not initialized");
+    CHAT_SDK_ERROR("DeepSeekProvider sendMessage failed: model not initialized");
     return "";
   }
 
@@ -197,8 +197,8 @@ std::string DeepSeekProvider::sendMessageStream(
   // 使用已经封装的 JSON 序列化接口
   std::string request_body;
 
-  if (!bitejson::serialize(root, &request_body)) {
-    ERR("DeepSeek request JSON serialization failed");
+  if (!ai_chat_sdk::json::serialize(root, &request_body)) {
+    CHAT_SDK_ERROR("DeepSeek request JSON serialization failed");
     return "";
   }
 
@@ -270,7 +270,7 @@ auto res = client.send(req);
 // 1. 优先判断 SSE 解析错误
 if (parser.hasError())
 {
-    ERR("DeepSeek SSE parse failed: {}",
+    CHAT_SDK_ERROR("DeepSeek SSE parse failed: {}",
         parser.errorMessage());
 
     return "";
@@ -279,7 +279,7 @@ if (parser.hasError())
 // 2. 检查网络传输
 if (!res)
 {
-    ERR("DeepSeek streaming network error: {}",
+    CHAT_SDK_ERROR("DeepSeek streaming network error: {}",
         httplib::to_string(res.error()));
 
     return "";
@@ -288,7 +288,7 @@ if (!res)
 // 3. 检查 HTTP 状态
 if (res->status != 200)
 {
-    ERR("DeepSeek streaming HTTP status: {}",
+    CHAT_SDK_ERROR("DeepSeek streaming HTTP status: {}",
         res->status);
 
     return "";
@@ -297,7 +297,7 @@ if (res->status != 200)
 // 4. 检查是否收到 SSE 结束标记
 if (!parser.isDone())
 {
-    ERR("DeepSeek stream ended without [DONE]");
+    CHAT_SDK_ERROR("DeepSeek stream ended without [DONE]");
 
     return "";
 }

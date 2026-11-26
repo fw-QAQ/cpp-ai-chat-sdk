@@ -47,8 +47,8 @@ std::string QwenProvider::getModelName() const { return "qwen3.8-flash"; }
 
 // 返回模型描述
 std::string QwenProvider::getModelDesc() const {
-  return "Qwen-4.1-flash 模型是深度求索公司基于 Qwen 4.1 "
-         "模型的快速响应模型，支持实时对话。";
+  return "Qwen是阿里巴巴集团Qwen团队研发的大语言模型和大型多模态模型系列 "
+         "的快速响应模型，支持实时对话。";
 }
 
 // 发送普通聊天请求
